@@ -29,7 +29,17 @@ print(nparray)
 
 print('\nmat2:')
 print(mat2.toNumpy())
-
-mat3 = mat1+mat1
+print(type(nparray))
+mat3 = mat1 + mat2
 print('\nmat3:')
 print(mat3.toNumpy())
+
+mat4 = mat2 - mat1
+print('\nmat4:')
+print(mat4.toNumpy())
+
+ 
+mat5 =  mat2 *5
+mat5 = 5 * mat2  
+print('\nmat5:')
+print(mat5.toNumpy())

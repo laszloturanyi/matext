@@ -22,16 +22,17 @@ public:
 
     py::array_t<float> toNumpy();
 
-    float* data() { return m_data; }
     size_t rows() const { return m_rows; }
     size_t cols() const { return m_cols; }
     
     void setElement(int idx, float value) { m_data[idx] = value; }
     
-    Matrix operator+(Matrix other) const;
-    //TODO Matrix operator-(Matrix other) const;
+    friend Matrix operator+(const Matrix& a, const Matrix& b);
+    friend Matrix operator-(const Matrix& a, const Matrix& b);
+    friend Matrix operator*(const Matrix& a, const float& value);
+    friend Matrix operator*(const float& value, const Matrix& a);
+    
     //TODO /(Mat,Scal)
-    //TODO *(Mat,Scal)
     //TODO *(Vec,Mat)
     //TODO *(Mat,Mat)
     //TODO /(Mat,Mat)
