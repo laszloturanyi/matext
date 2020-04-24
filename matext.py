@@ -1,4 +1,8 @@
-import matext.matext_core.build
-import matext.matext_core.matext_core as core
+import matext.core.build
+import matext.core.core as core
+import numpy as np
 
-print(core.fast_tanh(2))
+a = np.zeros((10,3))
+b = np.ones((10,3)) * 3 
+c = core.add_arrays(a, b)
+print(c)
