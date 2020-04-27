@@ -6,7 +6,7 @@ from distutils import sysconfig
 #cpp_args = ['-std=c++11', '-stdlib=libc++', '-mmacosx-version-min=10.7']
 
 matext_module = Extension(
-    'matext', sources = ['src/matext.cpp'],
+    'matext', sources = ['src/matrix.cpp', 'src/vector.cpp', 'src/main.cpp'],
     include_dirs=['pybind11/include', 'include'],
     language='c++',
     #extra_compile_args = cpp_args,

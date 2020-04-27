@@ -1,9 +1,11 @@
-#include "matext.h"
+#include "matrix.h"
+#include "vector.h"
 
 namespace py = pybind11;
 
 namespace matext
 {
+
 Matrix::Matrix(size_t rows, size_t cols)
 {
     m_rows = rows;
@@ -21,7 +23,6 @@ Matrix::Matrix(py::array_t<float> np_input)
     m_rows = buf.shape[0];
     m_cols = buf.shape[1];
     m_size = buf.size;
-    float* ptr = (float *) buf.ptr;
     m_data = (float *) buf.ptr;
 }
 
@@ -80,29 +81,18 @@ Matrix operator *(const float& value, const Matrix& a)
     return a*value;
 }
 
+Vector Matrix::operator*(const Vector& vec)
+{
+    Vector result(m_rows);
 
-PYBIND11_MODULE(matext, m) {
-        py::class_<Matrix>(m, "Matrix")
-        .def(py::init<py::array_t<float>>())
-        .def("rows", &Matrix::rows)
-        .def("cols", &Matrix::cols)
-        .def("setElement", &Matrix::setElement)
-        .def("toNumpy", &Matrix::toNumpy, R"pbdoc(Return numpy array.)pbdoc")
-        .def(py::self - py::self)
-        .def(py::self + py::self)
-        .def(py::self * float())
-        .def(float()  * py::self);
-        m.doc() = "Matrix class c++ extension for fast matrix calculations"; // optional module docstring
-        //TODO: Why these doesn't work?
-        //m.def("__add__", [](const Matrix& a, const Matrix& b) {return a + b;}, py::is_operator());
-        //m.def("__add__", &operator+);
-        //TODO: Does it work for vector class?
-        //.def(py::self + m.attr(Matrix))
-#ifdef VERSION_INFO
-    m.attr("__version__") = VERSION_INFO;
-#else
-    m.attr("__version__") = "dev";
-#endif
+    for(int r = 0; r < m_rows; r++)
+    {
+        result.m_data[r] = 0;
+        for (int c = 0; c < m_cols; c++)
+        {
+            result.m_data[r] += m_data[r*m_cols + c] * vec.m_data[c];
+        }
+    }
+    return result;
 }
-
 } //end of matext namespace
