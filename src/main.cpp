@@ -14,7 +14,12 @@ PYBIND11_MODULE(matext, m) {
         .def(py::self - py::self)
         .def(py::self * float())
         .def(float()  * py::self)
-        .def("__mul__", &Matrix::operator*);
+        .def(py::self * py::self)
+        .def("__mul__", py::overload_cast<const Vector&>(&Matrix::operator*, py::const_))
+        .def("det", &Matrix::det)
+        .def("T", &Matrix::T)
+        .def("inv", &Matrix::inv)
+        .def("submat", &Matrix::submat);
         
         py::class_<Vector>(m, "Vector")
         .def(py::init<py::array_t<float>>())

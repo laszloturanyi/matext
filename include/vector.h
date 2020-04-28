@@ -27,7 +27,7 @@ public:
     py::array_t<float> toNumpy();
 
     friend Vector operator+(const Vector& a, const Vector& b);
-    friend Vector Matrix::operator*(const Vector&);
+    friend Vector Matrix::operator*(const Vector& vec) const;
 
 private:
     float *m_data;
