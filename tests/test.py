@@ -107,3 +107,16 @@ print(np_inv)
 print('\n check inv:')
 id_mat = sq_matrix * sq_matrix.inv()
 print(id_mat.toNumpy())
+
+rect_array = np.array([[1,2,3,4],[5,2,9,7],[1,-1,3,-5]])
+rect_matrix = mx.Matrix(rect_array)
+
+print('\nnumpy pinv:')
+print(np.linalg.pinv(rect_array))
+
+print((rect_matrix*rect_matrix.T()).toNumpy())
+print('\nmatext pinv:')
+pinv_mat = rect_matrix.pinv()
+M = (pinv_mat.T()*pinv_mat).inv()
+print(pinv_mat.toNumpy())
+#print(pinv_mat.toNumpy())

@@ -33,6 +33,12 @@ public:
     Matrix submat(int row_ex, int col_ex) const;
     Matrix T() const;
     Matrix inv() const;
+    
+    /**
+     * Fast Computation of Moore-Penrose Inverse Matrices
+     * Courrieu, P. (2008).
+     * http://arxiv.org/abs/0804.4809
+     */
     Matrix pinv() const;
 
 private:

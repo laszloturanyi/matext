@@ -19,6 +19,7 @@ PYBIND11_MODULE(matext, m) {
         .def("det", &Matrix::det)
         .def("T", &Matrix::T)
         .def("inv", &Matrix::inv)
+        .def("pinv", &Matrix::pinv)
         .def("submat", &Matrix::submat);
         
         py::class_<Vector>(m, "Vector")

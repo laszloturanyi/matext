@@ -1,7 +1,8 @@
+#include <math.h>
+
 #include "matrix.h"
 #include "vector.h"
 
-# include <iostream>
 namespace matext
 {
 Matrix::Matrix(py::array_t<float, py::array::c_style | py::array::forcecast> np_input)
@@ -168,7 +169,7 @@ float Matrix::det() const
         //Itarate along first row
         for (int c = 0; c < n; c++)
         {
-            det += sign * m_data[c] * submat(0,c).det();
+            det += sign * m_data[c] * this->submat(0,c).det();
             //Use alternating sign
             sign *= -1.0F;
         }
@@ -195,7 +196,7 @@ Matrix Matrix::submat(int row_ex, int col_ex) const
 {
     if(m_rows < 2 || m_cols < 2)
     {
-        throw std::runtime_error("minor() cannot be applied to matrices where either dimension is lower than 2.");
+        throw std::runtime_error("submat() cannot be applied to matrices where either dimension is lower than 2.");
     }
     if(row_ex > m_rows - 1)
     {
@@ -232,7 +233,7 @@ Matrix Matrix::inv() const
     }
     size_t n = m_rows;
 
-    float determinant = det();
+    float determinant = this->det();
     if(determinant == 0)
     {
         throw std::runtime_error("Matrix is singular. Try pinv() instead.");
@@ -243,7 +244,7 @@ Matrix Matrix::inv() const
     {
         for(int c = 0; c < n; c++)
         {
-            cofactor.m_data[r*n + c] = pow(-1.0F, r+c) * submat(r,c).det();
+            cofactor.m_data[r*n + c] = pow(-1.0F, r+c) * this->submat(r,c).det();
         }
     }
 
@@ -253,7 +254,97 @@ Matrix Matrix::inv() const
 
 Matrix Matrix::pinv() const
 {
+    // Transpose if m < n 
+    bool transpose = false;
 
+    size_t m = this->m_rows;
+    size_t n = this->m_cols;
+    
+    //TODO this is not so elegant
+    Matrix A = Matrix(n,m);
+
+    if(m < n)
+    {
+        transpose = true;
+        A = (*this) * this->T();
+        n = m;
+    }
+    else
+    {
+        A = this->T() * (*this); 
+    }
+
+    // Full rank Cholesky factorization of A 
+    
+    // Get the lowest of positive diagonal elements for tolerance
+    float tol = A.m_data[0];
+
+    for (size_t idx = 0; idx <pow(n,2); idx += n+1)
+    {
+        //If tol was initialized as negative value, change to positive element
+        if(A.m_data[idx] > 0 && (A.m_data[idx] < tol || tol < 0))
+        {
+            tol = A.m_data[idx];
+        }
+    }
+    tol *= 1e-9F;
+    
+    Matrix L = Matrix(n,n);
+    memset(L.m_data, 0, L.m_size * sizeof(float));
+
+    // -1 instead of 0 because of zero based indexing. Later rank will be corrected.
+    int r = -1;
+    for (int k = 0; k < n ; k++)
+    {
+        r++;
+        for (int row = k; row < n; row++)
+        {
+            L.m_data[row*n + r] = A.m_data[row*n + k];
+            // If r = 0 subtracted vector is zero
+            for (int  col = 0; col < r; col++)
+            {
+                L.m_data[row*n + r] -= L.m_data[row*n + col] * L.m_data[k*n + col];
+            }
+        }
+        if (L.m_data[k*n + r] > tol)
+        {
+            L.m_data[k*n + r] = sqrt(L.m_data[k*n + r]);
+            if (k < n-1)
+            {
+                for(int row = k+1; row < n; row++)
+                {
+                    L.m_data[row*n + r] /=  L.m_data[k*n + r];
+                }
+            }
+        }
+        else
+        {
+            r--;
+        }
+    }
+
+    //Correcting rank because of zero based indexing
+    r++;
+    
+    Matrix L2 = Matrix(n,r);
+    for (int row = 0; row < n; row++)
+    {
+        for (int col = 0; col < r; col++)
+        {
+            L2.m_data[row*r + col] = L.m_data[row*n + col];
+        }
+    }
+    
+    //Computation of the generalized inverse
+    Matrix M = (L2.T()*L2).inv();
+    if (transpose)
+    {
+        return this->T() * L2 * M * M * L2.T();
+    }
+    else
+    {
+        return L2 * M * M * L2.T() * this->T();
+    }
 }
 
 } //end of matext namespace
