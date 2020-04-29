@@ -2,7 +2,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <pybind11/operators.h>
 
 namespace py = pybind11;
 namespace matext
@@ -29,7 +28,6 @@ public:
     friend Matrix operator*(const float& value, const Matrix& mat);
     
     float det() const;
-    Matrix submat(int row_ex, int col_ex) const;
     Matrix T() const;
     Matrix inv() const;
     
@@ -39,6 +37,9 @@ public:
      * http://arxiv.org/abs/0804.4809
      */
     Matrix pinv() const;
+
+private:
+    Matrix submat(int row_ex, int col_ex) const;
 
 private:
     py::array_t<float, py::array::c_style> m_np;

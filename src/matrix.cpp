@@ -43,7 +43,7 @@ Matrix Matrix::operator +(const Matrix& other) const
 {
     if(this->m_rows != other.m_rows || this->m_cols != other.m_cols)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
     Matrix result(this->m_rows, this->m_cols);
     
@@ -59,7 +59,7 @@ Matrix Matrix::operator -(const Matrix& other) const
 {
     if(this->m_rows != other.m_rows || this->m_cols != other.m_cols)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
     Matrix result(this->m_rows, this->m_cols);
     
@@ -104,7 +104,7 @@ Matrix Matrix::operator*(const Matrix& other) const
 {
     if (this->m_cols != other.m_rows)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
 
     Matrix result(this->m_rows, other.m_cols);
@@ -127,7 +127,7 @@ Vector Matrix::operator*(const Vector& vec) const
 {
     if(this->m_cols != vec.m_size)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
 
     Vector result(this->m_rows);

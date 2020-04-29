@@ -41,7 +41,7 @@ Vector Vector::operator+(const Vector& other) const
 {
     if(this->m_size != other.m_size)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
     Vector result(this->m_size);
     
@@ -57,7 +57,7 @@ Vector Vector::operator-(const Vector& other) const
 {
     if(this->m_size != other.m_size)
     {
-        throw std::runtime_error("Input shapes must match");
+        throw std::runtime_error("Input dimensions must match");
     }
     Vector result(this->m_size);
     

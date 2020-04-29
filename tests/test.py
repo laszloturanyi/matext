@@ -88,8 +88,6 @@ sq_matrix =mx.Matrix(sq_array)
 print('\nsq_matrix:')
 print(sq_matrix.toNumpy())
 
-print('\nsq_matrix submat:')
-print(sq_matrix.submat(0,0).toNumpy())
 print('\ndet:')
 print(sq_matrix.det())
 print(np.linalg.det(sq_array))
