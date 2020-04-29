@@ -1,4 +1,5 @@
 build
+matext.egg-info
 __pycache__
 *.pyd
 *.vscode
