@@ -36,9 +36,6 @@ print(npmat2)
 
 print('\nmat:')
 print(mat.toNumpy())
-print('\nmodified mat:')
-mat.setElement(0, 4.5)
-print(mat.toNumpy())
 
 print('\nnpmat')
 print(npmat)

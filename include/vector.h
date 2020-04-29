@@ -21,17 +21,23 @@ namespace matext
 class Vector
 {
 public:
+    Vector(py::array_t<float, py::array::c_style | py::array::forcecast> np_input);
     Vector(size_t size);
-    Vector(py::array_t<float> np_input);
-    
+
     py::array_t<float> toNumpy();
 
-    friend Vector operator+(const Vector& a, const Vector& b);
+    Vector operator+(const Vector& other) const;
+    Vector operator-(const Vector& other) const;
+    Vector operator/(const float& value) const;
+    Vector operator*(const float& value) const;
+
+    friend Vector operator*(const float& value, const Vector& vec);
     friend Vector Matrix::operator*(const Vector& vec) const;
 
 private:
-    float *m_data;
+    py::array_t<float, py::array::c_style> m_np;
     size_t m_size;
+    float *m_data;
     
 };
 
