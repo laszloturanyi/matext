@@ -3,6 +3,7 @@
 #include "matrix.h"
 #include "vector.h"
 
+#include <iostream>
 namespace matext
 {
 Matrix::Matrix(py::array_t<float, py::array::c_style | py::array::forcecast> np_input)
@@ -106,17 +107,18 @@ Matrix Matrix::operator*(const Matrix& other) const
     {
         throw std::runtime_error("Input dimensions must match");
     }
-
+    auto other_T = other.T();
     Matrix result(this->m_rows, other.m_cols);
-
+    
+    memset(result.m_data, 0, result.m_size * sizeof(float));
+    
     for (int r1 = 0; r1 < this->m_rows; r1++)
     {
-        for (int c2 = 0; c2 < other.m_cols; c2++)
+        for (int c1 = 0; c1 < this->m_cols; c1++)
         {
-            result.m_data[r1*other.m_cols+c2] = 0;
-            for (int c1 = 0; c1 < m_cols; c1++)
+            for (int c2 = 0; c2 < other.m_cols; c2++)
             {
-                result.m_data[r1*other.m_cols + c2] += this->m_data[r1*this->m_cols + c1] * other.m_data[c1*other.m_cols + c2];
+                result(r1, c2) += (*this)(r1, c1) * other(c1, c2);
             }
         }
     }
@@ -137,44 +139,12 @@ Vector Matrix::operator*(const Vector& vec) const
         result.m_data[r] = 0;
         for (int c = 0; c < this->m_cols; c++)
         {
-            result.m_data[r] += this->m_data[r*m_cols + c] * vec.m_data[c];
+            result.m_data[r] += (*this)(r,c) * vec.m_data[c];
         }
     }
     return result;
 }
 
-float Matrix::det() const
-{
-    if(this->m_rows != this->m_cols)
-    {
-        throw std::runtime_error("det() can be applied only to square matrices.");
-    }
-
-    size_t n = this->m_rows;
-
-    if(n==1)
-    {
-        return m_data[0];
-    }
-    else if(n==2)
-    {
-        return m_data[0]*m_data[3] - m_data[1]*m_data[2];
-    }
-
-    else
-    {
-        float det = 0.0F;
-        float sign = 1.0F;
-        //Itarate along first row
-        for (int c = 0; c < n; c++)
-        {
-            det += sign * m_data[c] * this->submat(0,c).det();
-            //Use alternating sign
-            sign *= -1.0F;
-        }
-        return det;
-    }
-}
 
 Matrix Matrix::T() const
 {
@@ -184,89 +154,212 @@ Matrix Matrix::T() const
     {
         for (int c = 0; c < this->m_cols; c++)
         {
-            result.m_data[c*result.m_cols+r] = m_data[r*this->m_cols+c];
+            result(c,r) = (*this)(r,c);
         }
     }
 
     return result;
 }
 
-Matrix Matrix::submat(int row_ex, int col_ex) const
+float& Matrix::operator()(size_t row, size_t col)
 {
-    if(this->m_rows < 2 || this->m_cols < 2)
-    {
-        throw std::runtime_error("submat() cannot be applied to matrices where either dimension is lower than 2.");
-    }
-    if(row_ex >this->m_rows - 1)
+    if(row > this->m_rows - 1)
     {
         throw std::runtime_error("Row index is out of range.");
     }
-    if(col_ex > this->m_cols - 1)
+    if(col > this->m_cols - 1)
     {
         throw std::runtime_error("Column index is out of range.");
     }
 
-    Matrix submat = Matrix(this->m_rows-1 , this->m_cols-1);
-    
-    int idx = 0;
-    for(int r = 0; r < this->m_rows; r++)
+    return this->m_data[row*this->m_cols + col];
+}
+
+float& Matrix::operator()(size_t row, size_t col) const
+{
+    if(row > this->m_rows - 1)
     {
-        for(int c = 0; c < this->m_cols; c++)
-        {
-            if (r != row_ex && c != col_ex)
-            {
-                submat.m_data[idx] = this->m_data[r*this->m_cols+c];
-                idx++;
-            }
-        }
+        throw std::runtime_error("Row index is out of range.");
+    }
+    if(col > this->m_cols - 1)
+    {
+        throw std::runtime_error("Column index is out of range.");
     }
 
-    return submat;
+    return this->m_data[row*this->m_cols + col];
 }
+
+void Matrix::setIdentity()
+{
+    if(this->m_rows != this->m_cols)
+    {
+        throw std::runtime_error("setIdentity() can be applied only to square matrices.");
+    }
+    size_t N = this->m_rows; 
+    
+    memset(this->m_data, 0, this->m_size * sizeof(float));
+    
+    for (size_t idx = 0; idx <pow(N,2); idx += N+1)
+    {
+        this->m_data[idx] = 1;
+    }
+}
+
+void Matrix::swapRows(size_t row1, size_t row2)
+{
+    if(row1 > this->m_rows - 1 || row2 > this->m_rows - 1)
+    {
+        throw std::runtime_error("Row index is out of range.");
+    }
+
+    size_t row_size = this->m_rows*sizeof(float);
+    float* temp = new float[this->m_rows];
+    
+    float* row1_ptr = m_data + row1 * this->m_cols;
+    float* row2_ptr = m_data + row2 * this->m_cols;
+
+    memcpy(temp, row1_ptr, row_size);
+    memcpy(row1_ptr, row2_ptr, row_size);
+    memcpy(row2_ptr, temp, row_size);
+
+    delete temp;
+    
+}
+
+void Matrix::swapColumns(size_t col1, size_t col2)
+{
+    if(col1 > this->m_cols - 1 || col2 > this->m_cols - 1)
+    {
+        throw std::runtime_error("Column index is out of range.");
+    }
+    float temp = 0.0F;
+
+    for (size_t r = 0; r < this->m_rows; r ++)
+    {
+        temp = (*this)(r, col1);
+        (*this)(r, col1) = (*this)(r, col2);
+        (*this)(r, col2) = temp;
+    }
+}
+
+
 
 Matrix Matrix::inv() const
 {
+    
     if(this->m_rows != this->m_cols)
     {
         throw std::runtime_error("inv() can be applied only to square matrices.");
     }
-    size_t n = this->m_rows;
+    size_t N = this->m_rows;
 
-    float determinant = this->det();
-    if(determinant == 0)
-    {
-        throw std::runtime_error("Matrix is singular. Try pinv() instead.");
-    }
+    Matrix L = Matrix(N,N);
+    L.setIdentity();
 
-    Matrix cofactor = Matrix(n, n);
-    for(int r = 0; r < n; r++)
+    Matrix U = Matrix(N,N);
+    memcpy(U.m_data, this->m_data, (size_t) pow(N,2)*sizeof(float));
+
+    // P, Y, X is stored in the same matrix
+    Matrix P = Matrix(N,N);
+    P.setIdentity();
+
+    // Swap rows where diagonal element is zero but there is non zero
+    // element in a row below.
+    for(size_t k = 0; k < N; k++)
     {
-        for(int c = 0; c < n; c++)
+        if(fabs(U(k,k)) < FLT_EPSILON)
         {
-            cofactor.m_data[r*n + c] = pow(-1.0F, r+c) * this->submat(r,c).det();
+            for(size_t i = k+1; i < N; i++)
+            {
+                if(fabs(U(i,k)) > FLT_EPSILON)
+                {
+                    U.swapRows(i,k);
+                    P.swapRows(i,k);
+                    L.swapRows(i,k);
+                    L.swapColumns(i,k);
+                    break;
+                }
+            }
+        }
+
+        // If diagonal element is still zero, matrix is not invertable
+        if(fabs(U(k,k)) < FLT_EPSILON)
+        {
+            throw std::runtime_error("Matrix is not invertable."); 
+        }
+
+        // For all rows below diagonal
+        for(size_t i = k+1; i < N; i++)
+        {
+            // A(i,k) / A(k,k)
+            // but A cannot be used because rows are swapped
+            L(i,k) = U(i,k) / U(k,k);
+
+            // add i-th row and n-th row
+            // multiplied by: -A(i,k) / A(k,k)
+            for (size_t l = k; l < N; l++) {
+                U(i, l) -= L(i,k) * U(k,l);
+            }
+        }
+    }
+        
+    // solve LY=P*I
+    // Y is stored in the same matrix as P
+    // for all columns of Y
+    for (size_t c = 0; c < N; c++) {
+        // for all rows of L
+        for (size_t i = 0; i < N; i++) {
+            // for all columns of L
+            for (size_t j = 0; j < i; j++) {
+                // for all existing y
+                P(i,c) -= L(i,j) * P(j,c);
+            }
+        }
+    }
+    // solve Ux=y
+    // for all columns of X
+    for (size_t c = 0; c < N; c++) {
+        // for all rows of U
+        for (size_t l = 0; l < N; l++) {
+            // have to go in reverse order
+            size_t i = N - 1 - l;
+            // for all columns of U
+            for (size_t j = i + 1; j < N; j++) {
+                // for all existing x
+                P(i, c) -= U(i, j) * P(j, c);
+            }
+            // U(i,i) != 0
+            P(i, c) /= U(i, i);
+        }
+    }
+    
+    //check if all P(i,j) is finite
+    for (size_t i = 0; i < N; i++) {
+        for (size_t j = 0; j < N; j++) {
+            if (!isfinite(P(i,j))) {
+                throw std::runtime_error("Matrix is not invertable."); 
+            }
         }
     }
 
-    return cofactor.T() / determinant;
-
+    return P;
 }
 
 Matrix Matrix::pinv() const
 {
-    // Transpose if m < n 
+    // Transpose if M < N 
     bool transpose = false;
 
-    size_t m = this->m_rows;
-    size_t n = this->m_cols;
+    size_t M = this->m_rows;
+    size_t N = this->m_cols;
     
-    //TODO this is not so elegant
-    Matrix A = Matrix(n,m);
+    Matrix A = Matrix(M,N);
 
-    if(m < n)
+    if(M < N)
     {
         transpose = true;
         A = (*this) * this->T();
-        n = m;
+        N = M;
     }
     else
     {
@@ -278,41 +371,41 @@ Matrix Matrix::pinv() const
     // Get the lowest of positive diagonal elements for tolerance
     float tol = A.m_data[0];
 
-    for (size_t idx = 0; idx <pow(n,2); idx += n+1)
+    for (size_t i = 0; i < N; i++)
     {
         //If tol was initialized as negative value, change to positive element
-        if(A.m_data[idx] > 0 && (A.m_data[idx] < tol || tol < 0))
+        if(A(i,i) > 0 && (A(i,i) < tol || tol < 0))
         {
-            tol = A.m_data[idx];
+            tol = A(i,i);
         }
     }
     tol *= 1e-9F;
     
-    Matrix L = Matrix(n,n);
+    Matrix L = Matrix(N,N);
     memset(L.m_data, 0, L.m_size * sizeof(float));
 
     // -1 instead of 0 because of zero based indexing. Later rank will be corrected.
     int r = -1;
-    for (int k = 0; k < n ; k++)
+    for (int k = 0; k < N ; k++)
     {
         r++;
-        for (int row = k; row < n; row++)
+        for (int row = k; row < N; row++)
         {
-            L.m_data[row*n + r] = A.m_data[row*n + k];
+            L(row,r) = A(row,k);
             // If r = 0 subtracted vector is zero
             for (int  col = 0; col < r; col++)
             {
-                L.m_data[row*n + r] -= L.m_data[row*n + col] * L.m_data[k*n + col];
+                L(row,r) -= L(row,col) * L(k,col);
             }
         }
-        if (L.m_data[k*n + r] > tol)
+        if (L(k,r) > tol)
         {
-            L.m_data[k*n + r] = sqrt(L.m_data[k*n + r]);
-            if (k < n-1)
+            L(k,r) = sqrt(L(k,r));
+            if (k < N-1)
             {
-                for(int row = k+1; row < n; row++)
+                for(int row = k+1; row < N; row++)
                 {
-                    L.m_data[row*n + r] /=  L.m_data[k*n + r];
+                    L(row,r) /=  L(k,r);
                 }
             }
         }
@@ -325,24 +418,24 @@ Matrix Matrix::pinv() const
     //Correcting rank because of zero based indexing
     r++;
     
-    Matrix L2 = Matrix(n,r);
-    for (int row = 0; row < n; row++)
+    Matrix L2 = Matrix(N,r);
+    for (int row = 0; row < N; row++)
     {
         for (int col = 0; col < r; col++)
         {
-            L2.m_data[row*r + col] = L.m_data[row*n + col];
+            L2(row,col) = L(row,col);
         }
     }
     
-    //Computation of the generalized inverse
-    Matrix M = (L2.T()*L2).inv();
+    //Computation of the pseudoinverse
+    Matrix L2_inv = (L2.T()*L2).inv();
     if (transpose)
     {
-        return this->T() * L2 * M * M * L2.T();
+        return this->T() * L2 * L2_inv * L2_inv * L2.T();
     }
     else
     {
-        return L2 * M * M * L2.T() * this->T();
+        return L2 * L2_inv * L2_inv * L2.T() * this->T();
     }
 }
 

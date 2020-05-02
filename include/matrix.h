@@ -17,18 +17,20 @@ public:
     Matrix(size_t rows, size_t cols);
 
     py::array_t<float> toNumpy();
-        
     Matrix operator+(const Matrix& other) const;
     Matrix operator-(const Matrix& other) const;
     Matrix operator/(const float& value) const;
     Matrix operator*(const float& value) const;
     Matrix operator*(const Matrix& other) const;
     Vector operator*(const Vector& vec) const;
-
     friend Matrix operator*(const float& value, const Matrix& mat);
-    
-    float det() const;
+
     Matrix T() const;
+
+    /**
+     * Calculates matrix inverse for squared matrices
+     * based on LU factorization with partial pivoting (PLU)
+     */
     Matrix inv() const;
     
     /**
@@ -39,7 +41,11 @@ public:
     Matrix pinv() const;
 
 private:
-    Matrix submat(int row_ex, int col_ex) const;
+    inline float& operator()(size_t row, size_t col);
+    inline float& operator()(size_t row, size_t col) const;
+    inline void setIdentity();
+    inline void swapRows(size_t row1, size_t row2);
+    inline void swapColumns(size_t col1, size_t col2);
 
 private:
     py::array_t<float, py::array::c_style> m_np;

@@ -20,7 +20,6 @@ PYBIND11_MODULE(matext, m)
         .def(py::self * py::self, R"pbdoc(Returns matrix product of two matrices)pbdoc")
         .def("__mul__", py::overload_cast<const Vector&>(&Matrix::operator*, py::const_),
         R"pbdoc(Returns matrix-vector product of a matrix and a vector)pbdoc")
-        .def("det", &Matrix::det, R"pbdoc(Returns the determinant of a square matrix)pbdoc")
         .def("T", &Matrix::T, R"pbdoc(Returns the transpose of a matrix)pbdoc")
         .def("inv", &Matrix::inv, R"pbdoc(Returns the inverse of a square matrix if nonsingular)pbdoc")
         .def("pinv", &Matrix::pinv, R"pbdoc(Calculates the Moore-Penrose pseudoinverse of a matrix based on a full rank Cholesky factorization)pbdoc");
