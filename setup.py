@@ -22,6 +22,8 @@ setup(
     author_email='turanyilaszlo95@gmail.com',
     license='MIT',
     setup_requires=['pybind11>=2.2'], 
-    install_requires=['pybind11>=2.2'],
+    install_requires=['pybind11>=2.2',
+                      'numpy>=1.18.3',
+                      ],
     ext_modules = [matext_module],
 )
