@@ -17,6 +17,7 @@ These prerequisites are automatically installed when installing library from pip
 - [automatically installed] numpy (required to initiate Matrices and Vectors)
 
 ## Install from pip wheel
+Clone the repository and cd into the ```matext/dist```folder.  
 The matext library can be installed from wheel file with following command executed from the ```dist``` directory:
 ```
 pip install matext-0.1-cp36-cp36m-win_amd64.whl
